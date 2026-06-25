@@ -1,0 +1,23 @@
+#cloud-config
+hostname: samba-server
+ssh_pwauth: true
+chpasswd:
+  list: |
+    ubuntu:123
+  expire: false
+network:
+  version: 2
+  ethernets:
+    enp1s0:
+      addresses:
+        - 192.168.10.5/24
+      gateway4: 192.168.10.1
+      nameservers:
+        addresses: [8.8.8.8]
+packages:
+  - samba
+runcmd:
+  - mkdir -p /srv/samba/share
+  - chmod 777 /srv/samba/share
+  - echo -e "[share]\n  path = /srv/samba/share\n  browseable = yes\n  read only = no\n  guest ok = yes" >> /etc/samba/smb.conf
+  - systemctl restart smbd

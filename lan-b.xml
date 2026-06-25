@@ -1,0 +1,5 @@
+<network>
+  <name>lan-b</name>
+  <forward mode="bridge"/>
+  <bridge name="br-lan-b"/>
+</network>

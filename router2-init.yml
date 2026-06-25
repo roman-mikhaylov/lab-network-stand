@@ -1,0 +1,30 @@
+#cloud-config
+hostname: router2-vm
+ssh_pwauth: true
+chpasswd:
+  list: |
+    ubuntu:123
+  expire: false
+network:
+  version: 2
+  ethernets:
+    enp1s0:
+      addresses:
+        - 10.10.12.2/30
+      routes:
+        - to: default
+          via: 10.10.12.1
+    enp2s0:
+      addresses:
+        - 192.168.20.1/24
+packages:
+  - frr
+  - isc-dhcp-server
+runcmd:
+  - sysctl -w net.ipv4.ip_forward=1
+  - sed -i 's/ospfd=no/ospfd=yes/' /etc/frr/daemons
+  - systemctl restart frr
+  - vtysh -c "conf t" -c "router ospf" -c "network 10.10.12.0/30 area 0" -c "network 192.168.20.0/24 area 0"
+  - printf 'default-lease-time 600;\nmax-lease-time 7200;\noption subnet-mask 255.255.255.0;\noption broadcast-address 192.168.20.255;\noption routers 192.168.20.1;\noption domain-name-servers 8.8.8.8, 8.8.4.4;\nsubnet 192.168.20.0 netmask 255.255.255.0 {\n  range 192.168.20.50 192.168.20.100;\n}\n' > /etc/dhcp/dhcpd.conf
+  - sed -i 's/INTERFACESv4=""/INTERFACESv4="enp2s0"/' /etc/default/isc-dhcp-server
+  - systemctl restart isc-dhcp-server

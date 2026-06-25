@@ -1,0 +1,7 @@
+*.log
+*.img
+*.iso
+*.qcow2
+vm-backup/
+__pycache__/
+.DS_Store

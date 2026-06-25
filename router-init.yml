@@ -1,0 +1,14 @@
+#cloud-config
+hostname: kvm-router
+ssh_pwauth: true
+chpasswd:
+  list: |
+    ubuntu:123
+  expire: false
+runcmd:
+  - systemctl restart isc-dhcp-server
+  - systemctl restart frr
+  - iptables -t nat -A POSTROUTING -o enp1s0 -j MASQUERADE
+  - iptables -A FORWARD -i enp3s0 -o enp1s0 -j ACCEPT
+  - iptables -A FORWARD -i enp2s0 -o enp1s0 -j ACCEPT
+  - sysctl -w net.ipv4.ip_forward=1

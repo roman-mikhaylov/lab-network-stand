@@ -1,0 +1,51 @@
+#!/bin/bash
+echo "=== Блок 7: DHCP и маршруты для клиентов ==="
+sudo pkill -f "dhclient" 2>/dev/null || true
+
+# Очищаем хостовые концы veth
+sudo ip addr flush dev pc-a-eth 2>/dev/null || true
+sudo ip addr flush dev pc-b-eth 2>/dev/null || true
+
+# Запрос DHCP для PC-A
+echo "  Запрос DHCP для PC-A..."
+sudo ip netns exec pc-a ip addr flush dev pc-a-eth 2>/dev/null || true
+sudo timeout 15 ip netns exec pc-a dhclient pc-a-eth 2>/dev/null || sudo ip netns exec pc-a dhclient pc-a-eth 2>/dev/null &
+
+# Запрос DHCP для PC-B
+echo "  Запрос DHCP для PC-B..."
+sudo ip netns exec pc-b ip addr flush dev pc-b-eth 2>/dev/null || true
+sudo timeout 15 ip netns exec pc-b dhclient pc-b-eth 2>/dev/null || sudo ip netns exec pc-b dhclient pc-b-eth 2>/dev/null &
+
+sleep 8
+
+# Получаем IP
+PC_A_IP=$(sudo ip netns exec pc-a ip addr show pc-a-eth | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+PC_B_IP=$(sudo ip netns exec pc-b ip addr show pc-b-eth | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+
+# Если PC-A не получил — пробуем ещё
+if [ -z "$PC_A_IP" ]; then
+    echo "  Повторный запрос DHCP для PC-A..."
+    sudo timeout 15 ip netns exec pc-a dhclient pc-a-eth 2>/dev/null || sudo ip netns exec pc-a dhclient pc-a-eth 2>/dev/null &
+    sleep 5
+    PC_A_IP=$(sudo ip netns exec pc-a ip addr show pc-a-eth | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+fi
+
+# Добавляем маршруты (гарантированно)
+sudo ip netns exec pc-a ip route add default via 192.168.10.1 2>/dev/null || true
+sudo ip netns exec pc-a ip route add 192.168.20.0/24 via 192.168.10.1 2>/dev/null || true
+sudo ip netns exec pc-b ip route add default via 192.168.20.1 2>/dev/null || true
+sudo ip netns exec pc-b ip route add 192.168.10.0/24 via 192.168.20.1 2>/dev/null || true
+
+echo "Проверка:"
+[ -n "$PC_A_IP" ] && echo "  PC-A IP: $PC_A_IP - OK" || echo "  PC-A IP: нет - ОШИБКА"
+[ -n "$PC_B_IP" ] && echo "  PC-B IP: $PC_B_IP - OK" || echo "  PC-B IP: нет - ОШИБКА"
+
+# Гарантированное исправление PC-A
+if [ -z "$PC_A_IP" ]; then
+    echo "  Запуск резервного скрипта для PC-A..."
+    ./lab_07_fix_pca.sh
+fi
+
+
+echo "OK"
+
