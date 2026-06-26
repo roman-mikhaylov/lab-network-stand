@@ -8,27 +8,21 @@ if ! sudo virsh list --name | grep -q samba-server; then
     sleep 30
 fi
 
-# Привязываем интерфейс к мосту (если отвалился)
-sudo ip link set vnet69 master br-lan-a 2>/dev/null || true
+# Подключаем интерфейс к мосту
+VNET=$(sudo virsh domiflist samba-server | awk '/bridge/{print $1}')
+if [ -n "$VNET" ]; then
+    sudo ip link set "$VNET" master br-lan-a 2>/dev/null || true
+fi
 
-# Назначаем статический IP внутри ВМ (если потерялся)
-sshpass -p "123" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 ubuntu@192.168.10.51 \
-  "sudo ip addr add 192.168.10.51/24 dev enp1s0 2>/dev/null; \
-   sudo ip route add default via 192.168.10.1 2>/dev/null; \
-   sudo systemctl restart smbd 2>/dev/null" 2>/dev/null || true
-
-# Если SSH не работает – пробуем через консоль (однократно)
-if ! sshpass -p "123" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=3 ubuntu@192.168.10.51 "echo OK" 2>/dev/null; then
-    echo "  SSH недоступен, настройка через консоль..."
-    sudo virsh console samba-server --force <<END
+# Назначаем IP и маршрут внутри ВМ
+sudo virsh console samba-server --force <<'CMDS' 2>/dev/null
 ubuntu
 123
-sudo ip addr add 192.168.10.51/24 dev enp1s0
-sudo ip route add default via 192.168.10.1
-sudo systemctl restart smbd
+sudo ip addr add 192.168.10.51/24 dev enp1s0 2>/dev/null
+sudo ip route add default via 192.168.10.1 2>/dev/null
+sudo systemctl restart smbd 2>/dev/null
 exit
-END
-fi
+CMDS
 
 echo "  Samba-сервер готов"
 echo "OK"
