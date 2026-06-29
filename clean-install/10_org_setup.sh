@@ -41,6 +41,9 @@ echo "  Настройка cron (ежедневный бэкап)..."
 $SSH "echo '0 2 * * * tar czf /backup/etc-\$(date +\\%Y\\%m\\%d).tgz /etc 2>/dev/null; tar czf /backup/srv-\$(date +\\%Y\\%m\\%d).tgz /srv 2>/dev/null' | sudo crontab -"
 
 echo ""
+# Правило для Samba на KVM-роутере
+sshpass -p "123" ssh -o StrictHostKeyChecking=no ubuntu@192.168.17.10 "sudo iptables -A FORWARD -p tcp --dport 445 -d 192.168.10.10 -j ACCEPT" 2>/dev/null
+
 echo "РЕЗУЛЬТАТ:"
 echo "  Пользователи: admin1 (sudo, staff), user1, user2"
 echo "  Samba: public (всем), private (staff)"
