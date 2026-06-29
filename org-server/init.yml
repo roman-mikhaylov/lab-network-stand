@@ -1,0 +1,16 @@
+#cloud-config
+hostname: org-server
+ssh_pwauth: true
+chpasswd:
+  list: |
+    ubuntu:123
+  expire: false
+network:
+  version: 2
+  ethernets:
+    enp1s0:
+      addresses:
+        - 192.168.10.10/24
+      gateway4: 192.168.10.1
+      nameservers:
+        addresses: [8.8.8.8]
