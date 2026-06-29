@@ -72,6 +72,13 @@ subnet 192.168.20.0 netmask 255.255.255.0 {
 DHCP
 sudo ip netns exec r2 dhcpd -4 -cf /etc/dhcp/dhcpd.conf -lf /var/lib/dhcp/dhcpd.leases -f r2-eth1 &>/dev/null &
 sleep 3
+# Проверка и перезапуск DHCP, если не работает
+if ! sudo ip netns exec r2 ps aux | grep -q "[d]hcpd"; then
+    echo "  DHCP не запустился, пробуем ещё раз..."
+    sudo ip netns exec r2 dhcpd -4 -cf /etc/dhcp/dhcpd.conf -lf /var/lib/dhcp/dhcpd.leases -f r2-eth1 &>/dev/null &
+    sleep 3
+fi
+
 
 
 echo ""
