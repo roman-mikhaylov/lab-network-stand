@@ -180,4 +180,24 @@ sudo iptables -A FORWARD -i enp1s0 -o enp3s0 -p tcp --dport 445 -d 192.168.10.10
 
 ---
 
+---
 
+## 12. SSH упал после изменения конфига
+
+**Симптомы:** `ssh.service failed`, `Badly formatted port number`
+
+**Причина:** задвоилась строка `Port` в `/etc/ssh/sshd_config`.
+
+**Решение:**
+```bash
+# Проверить конфиг
+sudo sshd -t
+
+# Удалить все строки Port
+sudo sed -i '/^Port/d' /etc/ssh/sshd_config
+
+# Добавить одну правильную
+echo "Port 2222" | sudo tee -a /etc/ssh/sshd_config
+
+# Применить
+sudo sshd -t && sudo systemctl restart sshd
