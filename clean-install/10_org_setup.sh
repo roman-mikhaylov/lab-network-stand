@@ -89,6 +89,38 @@ FLUSH PRIVILEGES;
 SQL
 MARIADB
 
+# Админ-раздел с Basic Auth
+sshpass -p "123" ssh -o StrictHostKeyChecking=no ubuntu@192.168.10.10 <<'ADMIN'
+sudo apt install -y apache2-utils 2>/dev/null
+sudo htpasswd -cb /etc/nginx/.htpasswd admin admin123 2>/dev/null
+sudo mkdir -p /var/www/html/admin
+echo '<h1>Admin Panel</h1><p>Welcome, admin!</p>' | sudo tee /var/www/html/admin/index.html
+sudo chown -R www-data:www-data /var/www/html/admin
+sudo tee /etc/nginx/sites-available/default <<'NGINX'
+server {
+    listen 80;
+    server_name _;
+    root /var/www/html;
+    index index.html;
+
+    location /admin {
+        auth_basic "Admin Area";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+        alias /var/www/html/admin/;
+        try_files $uri $uri/ /admin/index.html;
+    }
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+NGINX
+sudo systemctl restart nginx
+ADMIN
+
+
+
+
 # Бэкапы
 sshpass -p "123" ssh -o StrictHostKeyChecking=no ubuntu@192.168.10.10 <<'BACKUP'
 sudo mkdir -p /backup
