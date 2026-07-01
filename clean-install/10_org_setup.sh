@@ -16,6 +16,7 @@ done
 
 # Установка пакетов
 echo "  Установка пакетов..."
+
 sshpass -p "123" ssh -o StrictHostKeyChecking=no ubuntu@192.168.10.10 "echo nameserver 8.8.8.8 | sudo tee /etc/resolv.conf; sudo apt update && sudo apt install -y samba nginx git mariadb-server" 2>/dev/null
 
 # Пользователи и Samba

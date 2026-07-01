@@ -11,13 +11,17 @@ sudo ip link set lan-a-port1 up
 sudo ip netns exec pc-a ip link set lo up
 sudo ip netns exec pc-a ip link set pc-a-eth up
 
-# PC-B -> LAN-B
+# PC-B -> LAN-B (с предварительным удалением старого интерфейса)
+sudo ip link del pc-b-eth 2>/dev/null || true
+sudo ip link del lan-b-port1 2>/dev/null || true
 sudo ip link add pc-b-eth type veth peer name lan-b-port1
-sudo ip link set pc-b-eth netns pc-b
+sudo ip link set pc-b-eth netns pc-b 2>/dev/null || sudo ip netns exec pc-b ip link set pc-b-eth name pc-b-eth 2>/dev/null
+sudo ip link set pc-b-eth netns pc-b 2>/dev/null || true
 sudo ip link set lan-b-port1 master br-lan-b
 sudo ip link set lan-b-port1 up
 sudo ip netns exec pc-b ip link set lo up
 sudo ip netns exec pc-b ip link set pc-b-eth up
+
 
 echo ""
 echo "РЕЗУЛЬТАТ:"
