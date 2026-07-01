@@ -86,6 +86,13 @@ lab_startup_chain.sh — скрипт для автозапуска
 
 lab-startup.service — systemd-сервис для запуска при загрузке
 
+
+## Видеодемонстрация
+
+Полная запись развёртывания стенда (10 частей, склеены в один файл):
+
+[final-lab-stand.webm](video/final-lab-stand.webm)
+
 Автор
 Роман, 2026
 
