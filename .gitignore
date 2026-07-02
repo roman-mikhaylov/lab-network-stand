@@ -6,3 +6,4 @@ vm-backup/
 __pycache__/
 .DS_Store
 burpsuite-pro/
+video/*.mp4
