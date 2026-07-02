@@ -3,7 +3,9 @@ echo "============================================"
 echo " ШАГ 08: Проверка связи"
 echo "============================================"
 
-PC_B=$(sudo ip netns exec pc-b ip addr show pc-b-eth | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+#PC_B=$(sudo ip netns exec pc-b ip addr show pc-b-eth | grep 'inet ' | awk '{print $2}' | cut -d/ -f1)
+#№C_B=$(sudo ip netns exec pc-b ip -4 addr show pc-b-eth | grep -oP 'inet \K[\d.]+')
+PC_B=$(sudo ip netns exec pc-b ip -4 addr show pc-b-eth | grep 'inet .*global' | grep -oP 'inet \K[\d.]+')
 
 echo "  PC-A -> PC-B ($PC_B):"
 sudo ip netns exec pc-a ping -c 2 -W 2 $PC_B >/dev/null 2>&1 && echo "    OK" || echo "    НЕТ"
